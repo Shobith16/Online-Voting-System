@@ -1,0 +1,187 @@
+.sidebar {
+    position: fixed;
+    top: 14%;
+    left: 0;
+    z-index: 3;
+    width: 250px;
+    height: 100%;
+    background-color: #333;
+    color: #fff;
+    
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .main{
+    display: grid;
+    grid-template-columns: 20% 80%;
+    overflow: auto;
+  }
+  
+  .sidebar__toggle-btn {
+    position: absolute;
+    top: 8%;
+    right: 10px;
+    background-color: transparent;
+    border: 3px solid gray;
+    padding:.5%;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: none;
+  }
+  .sidebar__menu-item {
+    padding: 10px;
+    list-style: none;
+    border-bottom: 1px solid #444;
+    cursor: pointer;
+  }
+  
+  .sidebar__menu-item:hover {
+    background-color: #444;
+  }
+  
+  
+ 
+  .homecontainer1 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: fixed;
+    top: 15%;
+    right:0;
+    height: 100%;
+    padding: 2rem;
+    background-color:transparent;
+    overflow: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  } 
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .candidates {
+    display: grid;
+    grid-template-columns:auto auto auto auto;
+    justify-content: center;
+    height: 100%;
+    
+    overflow: scroll;
+    padding: 4rem;
+    margin-top: 2rem;
+    gap: 4%;
+  }
+  .candidates::-webkit-scrollbar {
+    display: none; /* Hides the scrollbar in Safari and Chrome */
+  }
+  
+  .candidate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 60%;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 1rem;
+  }
+  
+  .image {
+    position: relative;
+    width: 100%;
+    height: 80%;
+    background-color: #ddd;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .party {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    padding: 0.5rem;
+    text-align: center;
+  }
+  
+  .details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+  }
+  
+  .candidatename {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+  
+  .location {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .vote {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #333;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+  
+  .vote:hover {
+    background-color: #444;
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 60%;
+      
+      transform: translateX(-100%);
+      
+    }
+  
+    .sidebar__toggle-btn {
+        position: absolute;
+        top: 8%;
+        right: 10px;
+        background-color: transparent;
+        border: 3px solid gray;
+        padding:2%;
+        border-radius: 3px;
+        font-family: Georgia, 'Times New Roman', Times, serif;
+        font-weight: bold;
+        color: #fff;
+        font-size: 15px;
+        cursor: pointer;
+        display: block;
+      }
+
+      .sidebar--open {
+        transform: translateX(0);
+      }
+      .candidates {
+        display: grid;
+        grid-template-columns: auto;
+      }
+  }

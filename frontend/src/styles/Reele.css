@@ -1,0 +1,18 @@
+.re_ele{
+    width: 100vw;
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;    
+    /* background-color: brown; */
+}
+.clear{
+    padding: 2em;
+    background-color: crimson;
+    border: 1px solid red;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size:1.5em;
+    cursor: pointer;
+}

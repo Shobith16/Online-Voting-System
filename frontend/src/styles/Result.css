@@ -1,0 +1,19 @@
+.resdiv {
+    margin: 20px;
+    /* background-color: aquamarine; */
+    width: 30vw;
+    height: fit-content;
+    position: relative;
+    left: 100%;
+    padding: 2%;
+  }
+  
+  .select-district {
+    margin-bottom: 20px;
+  }
+  
+  .chart-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  

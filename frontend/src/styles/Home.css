@@ -1,0 +1,121 @@
+.homecontainer {
+    display: flex;
+    flex-direction: column;
+    /* align-items: center; */
+    justify-content: center;
+    position: relative;
+    height: fit-content;
+    /* padding: 2rem; */
+    background-color: #f5f5f5;
+    
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .candidates {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    justify-content: center;
+    height: 100%;
+    /* padding: 4rem; */
+    margin-top: 2rem;
+    gap: 4%;
+  }
+  
+  .candidate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 80%;
+    padding: 10%;
+    border: 1px solid #ddd;
+    /* background-color: #444; */
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* margin: 1rem; */
+  }
+  
+  .image {
+    position: relative;
+    width: 100%;
+    height: fit-content;
+    padding: 10%;
+    background-color: #ddd;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .party {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    
+    text-align: center;
+  }
+  
+  .details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+  }
+  
+  .candidatename {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+  
+  .location {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .vote {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #333;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+  
+  .vote:hover {
+    background-color: #444;
+  }
+
+  @media screen and (max-width: 768px) {
+   
+    .candidates {
+      display: grid;
+      grid-template-columns: auto;
+      padding: 2rem;
+      width: 50%;
+      
+    }
+    
+   
+    
+  }
