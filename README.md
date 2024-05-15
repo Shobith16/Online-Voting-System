@@ -44,7 +44,6 @@ These steps will set up the environment for database access. Make sure to replac
 
 --- 
 
-Feel free to adjust any part of the instructions to better suit your project or add any additional information you think might be relevant.
 
 
 
