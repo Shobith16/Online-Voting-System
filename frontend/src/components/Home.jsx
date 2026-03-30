@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import '../styles/Home.css';
 import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
@@ -13,11 +13,11 @@ function Home() {
     const fetchData = async () => {
       try {
         // Fetch candidates details
-        const candidatesResponse = await axios.get('http://localhost:5000/candidates_details');
+        const candidatesResponse = await api.get('/candidates_details');
         const fetchedCandidates = candidatesResponse.data;
 
         // Fetch all user details
-        const userResponse = await axios.get('http://localhost:5000/user');
+        const userResponse = await api.get('/user');
         
         const user = userResponse.data.find(userData => userData.v_id === v_id);
 
@@ -42,7 +42,7 @@ function Home() {
         candidate.Vote += 1;
 
         // Send the updated candidate details to the backend
-        await axios.put(`http://localhost:5000/candidates/${candidateId}`, candidate);
+        await api.put(`/candidates/${candidateId}`, candidate);
         console.log(candidate.Vote);
 
         // Update the candidates array state
@@ -54,7 +54,7 @@ function Home() {
 
         // Show popup message
         alert('Vote successful!');
-        const response2 = await axios.post('http://localhost:5000/finishedvotinglist',{
+        const response2 = await api.post('/finishedvotinglist',{
           v_id,
         })
         navigate('/login')

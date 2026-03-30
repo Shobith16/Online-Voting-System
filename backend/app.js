@@ -3,9 +3,11 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require("bcryptjs");
+const jwt = require('jsonwebtoken');
 const User = require('./models/user');
 const Candidateschema = require('./models/candidates');
 const V_idlist = require('./models/FinishedVotinglist');
+const verifyToken = require('./middleware/auth');
 require('dotenv').config();
 
 const app = express();
@@ -76,7 +78,7 @@ app.delete('/clearVoters', async (req, res) => {
 
 
 
-app.post('/checkuser',async (req,res) => {
+app.post('/checkuser', verifyToken, async (req,res) => {
   const {v_id} = req.body;
   console.log("voter-id:",v_id)
   if (!v_id) {
@@ -97,7 +99,7 @@ app.post('/checkuser',async (req,res) => {
 
 });
 
-app.post('/finishedvotinglist', async (req, res) => {
+app.post('/finishedvotinglist', verifyToken, async (req, res) => {
   const { v_id } = req.body;
   console.log(v_id);
   // Validate form fields
@@ -127,7 +129,7 @@ app.post('/finishedvotinglist', async (req, res) => {
   }
 });
 
-app.put('/candidates/:id', async (req, res) => {
+app.put('/candidates/:id', verifyToken, async (req, res) => {
   const candidateId = req.params.id;
   const { Age, Candidate, District, Party, State, Taluk ,Vote } = req.body;
 
@@ -278,25 +280,33 @@ app.post('/login',async (req,res) => {
   const {username,password} = req.body;
   console.log(username)
   if (!username && !password) {
-      res.status(403).send('User name or password is not set');
-
+      return res.status(403).send('User name or password is not set');
   }
 
   const userdata= await User.findOne({username})
+  if (!userdata) {
+    return res.status(401).json({ message: 'Invalid username or password' });
+  }
   console.log(userdata)
   const isvalid= await bcrypt.compare(password,userdata.password);
-  // if(password==userdata.password){
   if(isvalid){
+    const token = jwt.sign(
+      { v_id: userdata.v_id, username: userdata.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
     console.log(userdata)
-    res.status(200).json({'message':'Successfully Loggedin!','v_id' :userdata.v_id})
+    res.status(200).json({'message':'Successfully Loggedin!','v_id' :userdata.v_id, token})
   } else {
-    res.status(401).send('Invalid username or password');
+    res.status(401).json({ message: 'Invalid username or password' });
   }
-
-
 });
 // const port = process.env.PORT || 3000;
 const port = process.env.PORT||5000
-app.listen(port, () => {
-  console.log(`Server started on port ${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server started on port ${port}`);
+  });
+}
+
+module.exports = app;

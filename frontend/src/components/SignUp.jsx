@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Signup.css'
 
@@ -422,7 +422,7 @@ function SignUp() {
     e.preventDefault();
   
     try {
-      const response = await axios.post('http://localhost:5000/signup', {
+      const response = await api.post('/signup', {
         username,
         age,
         v_id,

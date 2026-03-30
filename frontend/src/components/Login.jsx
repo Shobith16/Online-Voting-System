@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { useNavigate } from "react-router-dom";
 import '../styles/Login.css';
 
@@ -11,7 +11,7 @@ function Login() {
     e.preventDefault();
     try {
       console.log(username, password);
-      const response = await axios.post('http://localhost:5000/login', {
+      const response = await api.post('/login', {
         username,
         password,
       });
@@ -19,13 +19,14 @@ function Login() {
       console.log("Response Received:", response.data.message, 'Voter_id', response.data.v_id);
       const v_id = response.data.v_id;
   
-      const response2 = await axios.post('http://localhost:5000/checkuser', {
+      const response2 = await api.post('/checkuser', {
         v_id,
       });
   
       const isValid = response2.data.boolean === "true";
       console.log(isValid);
       if (isValid) {
+        localStorage.setItem('token', response.data.token);
         localStorage.setItem('Voter_id', response.data.v_id);
         navigate('/');
       }
