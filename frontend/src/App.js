@@ -1,24 +1,25 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './components/Home';
-import Login from './components/Login';
-import SignUp from './components/SignUp';
-import About from './components/About';
-import Admin from './components/Admin';
-import Overview from './components/Overview';
-import AddC from './components/AddC';
-import Result from './components/Result';
-import Reele from './components/Reele';
+import Layout from './layouts/Layout';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
+import About from './pages/About';
+import Admin from './pages/admin/Admin';
+import Overview from './pages/admin/Overview';
+import AddC from './pages/admin/AddC';
+import Result from './pages/admin/Result';
+import Reele from './pages/admin/Reele';
+import AdminRoute from './pages/admin/AdminRoute';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/Admin" element={<Admin><Overview /></Admin>} />
-        <Route path="/Addcandidate" element={<Admin><AddC /></Admin>} />
-        <Route path="/result" element={<Admin><Result /></Admin>} />
-        <Route path="/reele" element={<Admin><Reele /></Admin>} />
+        <Route path="/Admin" element={<AdminRoute><Admin><Overview /></Admin></AdminRoute>} />
+        <Route path="/Addcandidate" element={<AdminRoute><Admin><AddC /></Admin></AdminRoute>} />
+        <Route path="/result" element={<AdminRoute><Admin><Result /></Admin></AdminRoute>} />
+        <Route path="/reele" element={<AdminRoute><Admin><Reele /></Admin></AdminRoute>} />
         <Route path="/" element={<Layout><Home /></Layout>} />
         <Route path="/about" element={<Layout><About /></Layout>} />
         <Route path="/login" element={<Login />} />

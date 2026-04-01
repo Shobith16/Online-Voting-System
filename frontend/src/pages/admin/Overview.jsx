@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import '../styles/overview.css';
-// import logo from "../assets/logo.png";
+import api from '../../api/axios';
+import '../../styles/overview.css';
+// import logo from "../../assets/logo.png";
 
 function Overview() {
   const [candidates, setCandidates] = useState([]);
@@ -18,7 +18,7 @@ function Overview() {
 
   useEffect(() => {
     // Fetch candidate data from the backend API
-    axios.get('http://localhost:5000/candidates_details')
+    api.get('/candidates_details')
       .then(response => {
         setCandidates(response.data);
       })
@@ -44,10 +44,8 @@ function Overview() {
     try {
       // Send PUT request to update candidate details
       console.log(editedCandidate)
-      let response = await axios.put(`http://localhost:5000/candidates/${editingCandidate._id}`, editedCandidate);
+      let response = await api.put(`/candidates/${editingCandidate._id}`, editedCandidate);
 
-
-     
       console.log('Candidate updated successfully:', response.data);
       // Update candidate details in the UI
       setCandidates(prevCandidates => prevCandidates.map(candidate => {
@@ -69,7 +67,7 @@ function Overview() {
   const handleRemoveCandidate = async (candidateId) => {
     try {
       // Send DELETE request to remove candidate from the database
-      await axios.delete(`http://localhost:5000/candidate_del/${candidateId}`);
+      await api.delete(`/candidate_del/${candidateId}`);
       
       // Update state to reflect removal of the candidate
       setCandidates(prevCandidates => prevCandidates.filter(candidate => candidate._id !== candidateId));

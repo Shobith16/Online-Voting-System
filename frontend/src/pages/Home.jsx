@@ -35,32 +35,25 @@ function Home() {
   }, []);
 
   // Function to handle vote
-  const handleVote = async (candidateId, candidate) => {
+  const handleVote = async (candidateId) => {
     try {
       if (!hasVoted) {
-        // Update the candidate's vote count
-        candidate.Vote += 1;
-
-        // Send the updated candidate details to the backend
-        await api.put(`/candidates/${candidateId}`, candidate);
-        console.log(candidate.Vote);
-
-        // Update the candidates array state
-        const updatedCandidates = candidates.map(c => c._id === candidateId ? { ...c, Vote: candidate.Vote } : c);
-        setCandidates(updatedCandidates);
+        // Send the vote request to the backend (backend will handle increment)
+        await api.put(`/candidates/${candidateId}`, {});
 
         // Set hasVoted to true
         setHasVoted(true);
 
         // Show popup message
         alert('Vote successful!');
-        const response2 = await api.post('/finishedvotinglist',{
+        await api.post('/finishedvotinglist', {
           v_id,
-        })
-        navigate('/login')
+        });
+        navigate('/login');
       }
     } catch (error) {
       console.error('Error voting:', error);
+      alert('Error casting vote. Please try again.');
     }
   };
 

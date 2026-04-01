@@ -46,3 +46,14 @@
     background-color: #040405;
   }
   
+  @media screen and (max-width: 480px) {
+    .login {
+      top: 50px;
+      width: 85%;
+      padding: 15px;
+    }
+    .login h1 {
+      font-size: 1.5rem;
+    }
+  }
+  

@@ -107,15 +107,21 @@
   }
 
   @media screen and (max-width: 768px) {
-   
-    .candidates {
-      display: grid;
-      grid-template-columns: auto;
-      padding: 2rem;
-      width: 50%;
-      
+    .title {
+      font-size: 1.8rem;
     }
-    
-   
-    
+    .candidates {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+      width: 90%;
+      margin: 1rem auto;
+      gap: 1.5rem;
+    }
+    .candidate {
+      height: auto;
+      padding: 1rem;
+    }
+    .image {
+      height: 15rem;
+    }
   }

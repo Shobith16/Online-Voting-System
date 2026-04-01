@@ -51,3 +51,19 @@
     background-color: #0056b3;
   }
   
+  @media screen and (max-width: 480px) {
+    .signup-container {
+      top: 50px;
+      margin: 10px;
+      padding: 15px;
+      max-width: none;
+    }
+    input[type="text"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="number"],
+    select {
+      width: 92%;
+    }
+  }
+  

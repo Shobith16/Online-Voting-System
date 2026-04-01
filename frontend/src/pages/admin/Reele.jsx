@@ -1,12 +1,12 @@
-import axios from "axios";
-import '../styles/Reele.css'
+import api from "../../api/axios";
+import '../../styles/Reele.css'
 
 
 function Reele() {
     const clearvoters = async () => {
         try {
             // Send DELETE request to remove candidate from the database
-            await axios.delete(`http://localhost:5000/clearVoters`);
+            await api.delete(`/clearVoters`);
 
             alert("Re-Election Initiated Sucessfully")
         } catch (error) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import '../styles/AddC.css'
-import axios from 'axios';
+import '../../styles/AddC.css'
+import api from '../../api/axios';
 function AddC() {
   const [form, setForm] = useState({
     Candidate: '',
@@ -47,7 +47,7 @@ function AddC() {
     // If there are no errors, submit the form
     try {
       // console.log(candidate,Age,Party,state)
-      const response = await axios.post("http://localhost:5000/candidates", form);
+      const response = await api.post("/candidates", form);
 
       console.log(response.data.message);
       alert(response.data.message)

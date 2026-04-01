@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "./Header";
-import "../styles/Admin.css";
+import Header from "../../components/Header";
+import "../../styles/Admin.css";
 
 
 function Admin({children}) {

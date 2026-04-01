@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { Pie } from "react-chartjs-2";
 import Chart from "chart.js/auto";
 import { CategoryScale } from "chart.js";
-import '../styles/Result.css';
-import districtsData from '../json/district.json';
+import '../../styles/Result.css';
+import districtsData from '../../json/district.json';
 
 Chart.register(CategoryScale);
 
@@ -32,7 +32,7 @@ function Result() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/candidates_details`);
+        const response = await api.get(`/candidates_details`);
         const filteredCandidates = response.data.filter(candidate => candidate.District.toLowerCase() === selectedDistrict.toLowerCase());
         setCandidates(filteredCandidates);
       } catch (error) {

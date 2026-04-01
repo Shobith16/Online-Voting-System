@@ -5,10 +5,11 @@ const UserSchema = new mongoose.Schema({
   age: Number,
   v_id: String,
   phone: Number,
-  State:String,
-  District:String,
-  Taluk:String,
-  password: String
+  State: String,
+  District: String,
+  Taluk: String,
+  password: String,
+  isAdmin: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('voters', UserSchema);

@@ -4,70 +4,67 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
 const User = require('./models/user');
 const Candidateschema = require('./models/candidates');
 const V_idlist = require('./models/FinishedVotinglist');
-const verifyToken = require('./middleware/auth');
+const { verifyToken, verifyAdmin } = require('./middleware/auth');
 require('dotenv').config();
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 app.use(cors({
-  origin: 'http://localhost:3000', 
-  methods: ['GET', 'POST'], 
-  allowedHeaders: ['Content-Type', 'Authorization'], 
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-const mongoURL = process.env.MONGODB_URL 
-// console.log(mongoURL);
+const mongoURL = process.env.MONGODB_URL
 if (!mongoURL) {
-    console.error('MONGODB_URL environment variable not set');
-    process.exit(1);
-  }
+  console.error('MONGODB_URL environment variable not set');
+  process.exit(1);
+}
 
 // Set up MongoDB connection
 mongoose.connect(mongoURL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+  useNewUrlParser: true,
+  useUnifiedTopology: true
 })
 
-// Get the default connection
-// Mongoose maintains a default connection object representing the MongoDB connection.
 const db = mongoose.connection;
 
-// Define event listeners for database connection
-
 db.on('connected', () => {
-    console.log('Connected to MongoDB server');
+  console.log('Connected to MongoDB server');
 });
 
 db.on('error', (err) => {
-    console.error('MongoDB connection error:', err);
+  console.error('MongoDB connection error:', err);
 });
 
 db.on('disconnected', () => {
-    console.log('MongoDB disconnected');
+  console.log('MongoDB disconnected');
 });
 
-app.delete('/clearVoters', async (req, res) => {
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
+
+app.delete('/clearVoters', verifyAdmin, async (req, res) => {
   console.log('Deleting all voters');
   try {
-    // Delete all voters from the V_idlist collection
     await V_idlist.deleteMany({});
-
-    // Fetch all candidates from the candidates collection
     const collection = db.collection('candidates');
     const candidates = await collection.find({}).toArray();
 
-    // Reset vote count for all candidates and update them in the database
     for (const candidate of candidates) {
-      candidate.Vote = 0; // Reset vote count to 0
-      // Update candidate in the database
       await collection.updateOne({ _id: candidate._id }, { $set: { Vote: 0 } });
     }
 
-    // Respond with success message
     res.json({ message: 'Voters removed successfully' });
   } catch (error) {
     console.error('Error removing voters:', error);
@@ -75,55 +72,37 @@ app.delete('/clearVoters', async (req, res) => {
   }
 });
 
-
-
-
-app.post('/checkuser', verifyToken, async (req,res) => {
-  const {v_id} = req.body;
-  console.log("voter-id:",v_id)
+app.post('/checkuser', verifyToken, async (req, res) => {
+  const { v_id } = req.body;
   if (!v_id) {
-      res.status(403).send('no voter id found!');
-
+    return res.status(403).send('no voter id found!');
   }
 
-  const userdata= await V_idlist.findOne({v_id})
-  
-  if(!userdata){
-    
-    res.status(200).json({'message':'voter id not found!','boolean':'true'})
+  const userdata = await V_idlist.findOne({ v_id })
+
+  if (!userdata) {
+    res.status(200).json({ 'message': 'voter id not found!', 'boolean': 'true' })
   } else {
-    console.log('aleary voted once!')
-    res.status(401).json({'message':'aleary voted once!','boolean':'false'})
+    res.status(401).json({ 'message': 'aleary voted once!', 'boolean': 'false' })
   }
-
-
 });
 
 app.post('/finishedvotinglist', verifyToken, async (req, res) => {
   const { v_id } = req.body;
-  console.log(v_id);
-  // Validate form fields
   if (!v_id) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
-  
   const existingcandidate = await V_idlist.findOne({ v_id });
-    if (existingcandidate) {
-      return res.json({ message: "Candidate have already Voted Once!" });
+  if (existingcandidate) {
+    return res.json({ message: "Candidate have already Voted Once!" });
   }
 
-  // Save the form data to the database
-  const candidateData = new V_idlist({
-    v_id,
-    
-  });
+  const candidateData = new V_idlist({ v_id });
 
   try {
     await candidateData.save();
-    console.log(candidateData)
     res.status(201).json({ message: 'Voting successfull!' });
-    console.log('Thankyou for Voting!')
   } catch (error) {
     res.status(500).json({ error: 'Voter id addition failed!' });
   }
@@ -131,18 +110,24 @@ app.post('/finishedvotinglist', verifyToken, async (req, res) => {
 
 app.put('/candidates/:id', verifyToken, async (req, res) => {
   const candidateId = req.params.id;
-  const { Age, Candidate, District, Party, State, Taluk ,Vote } = req.body;
 
   try {
-    const updatedCandidate = await Candidateschema.findByIdAndUpdate(candidateId, {
-      Candidate,
-      Age,
-      Party,
-      State,
-      District,
-      Taluk,
-      Vote
-    }, { new: true });
+    const { Age, Candidate, District, Party, State, Taluk } = req.body;
+    
+    let updateData = {};
+    if (Candidate) updateData.Candidate = Candidate;
+    if (Age) updateData.Age = Age;
+    if (Party) updateData.Party = Party;
+    if (State) updateData.State = State;
+    if (District) updateData.District = District;
+    if (Taluk) updateData.Taluk = Taluk;
+
+    // Use $inc for Vote to ensure server-side increment
+    const updatedCandidate = await Candidateschema.findByIdAndUpdate(
+      candidateId, 
+      { ...updateData, $inc: { Vote: 1 } }, 
+      { new: true }
+    );
 
     if (!updatedCandidate) {
       return res.status(404).json({ error: 'Candidate not found' });
@@ -155,14 +140,9 @@ app.put('/candidates/:id', verifyToken, async (req, res) => {
   }
 });
 
-
-// Backend API endpoint for deleting a candidate
-app.delete('/candidate_del/:id', async (req, res) => {
+app.delete('/candidate_del/:id', verifyAdmin, async (req, res) => {
   const candidateId = req.params.id;
-  console.log('Deleting candidate')
-
   try {
-    // Delete the candidate from the database
     await Candidateschema.findByIdAndDelete(candidateId);
     res.json({ message: 'Candidate removed successfully' });
   } catch (error) {
@@ -171,18 +151,11 @@ app.delete('/candidate_del/:id', async (req, res) => {
   }
 });
 
-
-
 app.get('/candidates_details', async (req, res) => {
   try {
-    // const db = client.db('Voters');
     const collection = db.collection('candidates');
-    // console.log(collection);
-    // Fetch all details of candidates
     const candidates = await collection.find({}).toArray();
-    // console.log(candidates)
     res.json(candidates);
-    
   } catch (err) {
     console.error('Error fetching candidates:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -191,35 +164,34 @@ app.get('/candidates_details', async (req, res) => {
 
 app.get('/user', async (req, res) => {
   try {
-    // const db = client.db('Voters');
     const collection = db.collection('voters');
-    // console.log(collection);
-    // Fetch all details of candidates
     const voters = await collection.find({}).toArray();
-    // console.log(candidates)
     res.json(voters);
-    
   } catch (err) {
     console.error('Error fetching candidates:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.post('/candidates', async (req, res) => {
-  const { Candidate, Age, Party, State, District, Taluk ,Vote } = req.body;
-  console.log(Candidate, Age, Party, State, District, Taluk ,Vote);
-  // Validate form fields
-  if (!Candidate || !Age || !Party || !State || !District || !Taluk || !Vote) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
+app.post('/candidates', 
+  verifyAdmin,
+  [
+    body('Candidate').notEmpty().withMessage('Candidate name is required'),
+    body('Age').isNumeric().withMessage('Age must be a number'),
+    body('Party').notEmpty().withMessage('Party is required'),
+    body('State').notEmpty().withMessage('State is required'),
+    body('District').notEmpty().withMessage('District is required'),
+    body('Taluk').notEmpty().withMessage('Taluk is required'),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+  const { Candidate, Age, Party, State, District, Taluk, Vote } = req.body;
 
-  
   const existingcandidate = await Candidateschema.findOne({ Candidate });
-    if (existingcandidate) {
-      return res.json({ message: "Candidate already Registered!" });
+  if (existingcandidate) {
+    return res.json({ message: "Candidate already Registered!" });
   }
 
-  // Save the form data to the database
   const candidateData = new Candidateschema({
     Candidate,
     Age,
@@ -227,34 +199,37 @@ app.post('/candidates', async (req, res) => {
     State,
     District,
     Taluk,
-    Vote,
+    Vote: Vote || 0,
   });
 
   try {
     await candidateData.save();
-    console.log(candidateData)
     res.status(201).json({ message: 'Candidate added successfully' });
-    console.log('Candidate added successfully')
   } catch (error) {
     res.status(500).json({ error: 'Failed to add candidate' });
   }
 });
 
-app.post('/signup', async (req, res) => {
-  console.log(req.body)
-  const { username, age, v_id, phone, password,State,District,Taluk } = req.body;
-  
-  if (!username || !age || !v_id || !phone ||!State ||
-    !District ||!Taluk ||!password) {
-    console.log(username, age, v_id, phone, password,State,District,Taluk)  
-    return res.status(400).send('All fields are required',username, age, v_id, phone, password,State,District,Taluk);
-  }
+app.post('/signup', 
+  [
+    body('username').notEmpty().withMessage('Username is required'),
+    body('age').isInt({ min: 18 }).withMessage('Age must be at least 18'),
+    body('v_id').notEmpty().withMessage('Voter ID is required'),
+    body('phone').matches(/^[0-9]{10}$/).withMessage('Phone number must be 10 digits'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+    body('State').notEmpty().withMessage('State is required'),
+    body('District').notEmpty().withMessage('District is required'),
+    body('Taluk').notEmpty().withMessage('Taluk is required'),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+  const { username, age, v_id, phone, password, State, District, Taluk } = req.body;
+
   const existingUser = await User.findOne({ v_id });
-    if (existingUser) {
-      console.log('User already exists')
-      return res.status(400).json({ message: "Username already exists" });
+  if (existingUser) {
+    return res.status(400).json({ message: "Voter ID already registered" });
   }
- 
+
   const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = new User({
     username,
@@ -264,49 +239,76 @@ app.post('/signup', async (req, res) => {
     State,
     District,
     Taluk,
-    password:hashedPassword,
+    password: hashedPassword,
   });
 
   try {
     await newUser.save();
-    console.log(newUser)
     res.status(200).send('User registered successfully');
   } catch (err) {
-    console.log(err);
     res.status(500).send('Server error');
   }
 });
-app.post('/login',async (req,res) => {
-  const {username,password} = req.body;
-  console.log(username)
-  if (!username && !password) {
-      return res.status(403).send('User name or password is not set');
-  }
 
-  const userdata= await User.findOne({username})
+app.post('/login',
+  [
+    body('username').notEmpty().withMessage('Username is required'),
+    body('password').notEmpty().withMessage('Password is required'),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+  const { username, password } = req.body;
+
+  const userdata = await User.findOne({ username })
   if (!userdata) {
     return res.status(401).json({ message: 'Invalid username or password' });
   }
-  console.log(userdata)
-  const isvalid= await bcrypt.compare(password,userdata.password);
-  if(isvalid){
+
+  const isvalid = await bcrypt.compare(password, userdata.password);
+  if (isvalid) {
     const token = jwt.sign(
-      { v_id: userdata.v_id, username: userdata.username },
+      { v_id: userdata.v_id, username: userdata.username, isAdmin: userdata.isAdmin },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
-    console.log(userdata)
-    res.status(200).json({'message':'Successfully Loggedin!','v_id' :userdata.v_id, token})
+    res.status(200).json({ 'message': 'Successfully Loggedin!', 'v_id': userdata.v_id, isAdmin: userdata.isAdmin, token })
   } else {
     res.status(401).json({ message: 'Invalid username or password' });
   }
 });
-// const port = process.env.PORT || 3000;
-const port = process.env.PORT||5000
+
+app.post('/admin/login',
+  [
+    body('username').notEmpty().withMessage('Username is required'),
+    body('password').notEmpty().withMessage('Password is required'),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+  const { username, password } = req.body;
+
+  const userdata = await User.findOne({ username });
+  if (!userdata || !userdata.isAdmin) {
+    return res.status(401).json({ message: 'Invalid admin credentials' });
+  }
+
+  const isvalid = await bcrypt.compare(password, userdata.password);
+  if (isvalid) {
+    const token = jwt.sign(
+      { v_id: userdata.v_id, username: userdata.username, isAdmin: true },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+    res.status(200).json({ message: 'Admin logged in successfully', token });
+  } else {
+    res.status(401).json({ message: 'Invalid admin credentials' });
+  }
+});
+
+const port = process.env.PORT || 5000
 if (require.main === module) {
   app.listen(port, () => {
     console.log(`Server started on port ${port}`);
   });
 }
 
-module.exports = app;
+module.exports = app;

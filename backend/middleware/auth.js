@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -20,4 +21,19 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-module.exports = verifyToken;
+const verifyAdmin = async (req, res, next) => {
+  verifyToken(req, res, async () => {
+    try {
+      const user = await User.findOne({ v_id: req.user.v_id });
+      if (user && user.isAdmin) {
+        next();
+      } else {
+        return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal server error.' });
+    }
+  });
+};
+
+module.exports = { verifyToken, verifyAdmin };
