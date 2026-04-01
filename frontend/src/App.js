@@ -11,6 +11,8 @@ import AddC from './pages/admin/AddC';
 import Result from './pages/admin/Result';
 import Reele from './pages/admin/Reele';
 import AdminRoute from './pages/admin/AdminRoute';
+import ProtectedRoute from './pages/ProtectedRoute';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -20,10 +22,11 @@ function App() {
         <Route path="/Addcandidate" element={<AdminRoute><Admin><AddC /></Admin></AdminRoute>} />
         <Route path="/result" element={<AdminRoute><Admin><Result /></Admin></AdminRoute>} />
         <Route path="/reele" element={<AdminRoute><Admin><Reele /></Admin></AdminRoute>} />
-        <Route path="/" element={<Layout><Home /></Layout>} />
-        <Route path="/about" element={<Layout><About /></Layout>} />
+        <Route path="/" element={<ProtectedRoute><Layout><Home /></Layout></ProtectedRoute>} />
+        <Route path="/about" element={<ProtectedRoute><Layout><About /></Layout></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       </Routes>
     </Router>
   );

@@ -1,53 +1,27 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Header from "../../components/Header";
-import "../../styles/Admin.css";
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, UserPlus, PieChart, RefreshCcw } from 'lucide-react';
+import '../../styles/Admin.css'
 
-
-function Admin({children}) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-  const navigate = useNavigate();
-  const overview = () => {
-    navigate("/Admin");
-  };
-  const add = () => {
-    navigate("/Addcandidate");
-  };
-  const result = () => {
-    navigate("/result");
-  };
-  const reelection = () => {
-    navigate("/reele");
-  };
-  const logout = () => {
-    navigate("/login");
-  };
-
+const Admin = ({ children }) => {
   return (
-    <div className="admincontainer">
-      <Header />
-      <button className="sidebar__toggle-btn" onClick={toggleSidebar}>
-          {isSidebarOpen ? "<<" : ">>"} Sidebar
-      </button>
-      <div className="main">
-        
-        <div className={`sidebar ${isSidebarOpen ? "sidebar--open" : ""}`}>
-          <ul className="sidebar__menu">
-            <li className="sidebar__menu-item" onClick={overview}> Overview</li>
-            <li className="sidebar__menu-item" onClick={add}>Add Candidate</li>
-            <li className="sidebar__menu-item" onClick={result}>Result</li>
-            <li className="sidebar__menu-item" onClick={reelection}>Re-Election</li>
-            <li className="sidebar__menu-item" onClick={logout}>Logout</li>
-          </ul>
-        </div>
+    <div className="admin-layout">
+      <div className="sidebar neumorphic">
+        <NavLink to="/Addcandidate" className={({isActive}) => isActive ? "active" : ""}>
+          <UserPlus size={20} /> <span>Add Candidate</span>
+        </NavLink>
+        <NavLink to="/reele" className={({isActive}) => isActive ? "active" : ""}>
+          <RefreshCcw size={20} /> <span>Reset Election</span>
+        </NavLink>
+        <NavLink to="/result" className={({isActive}) => isActive ? "active" : ""}>
+          <PieChart size={20} /> <span>Electoral Results</span>
+        </NavLink>
+      </div>
+      <div className="admin-content">
         {children}
       </div>
     </div>
   );
-}
+};
 
 export default Admin;

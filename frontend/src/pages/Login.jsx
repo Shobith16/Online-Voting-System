@@ -1,77 +1,110 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
-import { useNavigate } from "react-router-dom";
+import { User, Lock, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Popup from '../components/Popup';
 import '../styles/Login.css';
 
-function Login() {
-  const [username, setusername]=useState('')
-  const [password, setpassword]=useState('')
+const Login = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [popup, setPopup] = useState({ isOpen: false, type: 'info', message: '' });
   const navigate = useNavigate();
-  const login = async (e) => {
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      console.log(username, password);
-      const response = await api.post('/login', {
-        username,
-        password,
-      });
-  
-      console.log("Response Received:", response.data.message, 'Voter_id', response.data.v_id);
+      const response = await api.post('/login', { username, password });
       const v_id = response.data.v_id;
-  
-      const response2 = await api.post('/checkuser', {
-        v_id,
-      });
-  
-      const isValid = response2.data.boolean === "true";
-      console.log(isValid);
-      if (isValid) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('Voter_id', response.data.v_id);
-        navigate('/');
+      const token = response.data.token;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('Voter_id', v_id);
+
+      if (response.data.isAdmin) {
+        localStorage.setItem('adminToken', token);
       }
-  
-    } catch (err) {
-      if (err.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Server responded with error status:", err.response.status);
-        console.error("Error message from server:", err.response.data.message);
-        alert( "\nError message: " + err.response.data.message);
-      } else if (err.request) {
-        // The request was made but no response was received
-        console.error("No response received from the server");
-        alert("No response received from the server");
+
+      const checkUserResponse = await api.post('/checkuser', { v_id });
+
+      if (checkUserResponse.data.boolean === "true") {
+        setPopup({
+          isOpen: true,
+          type: 'success',
+          message: response.data.isAdmin ? 'Admin access granted. Welcome!' : 'Successfully logged in! You are eligible to vote.'
+        });
+        setTimeout(() => navigate(response.data.isAdmin ? '/Admin' : '/'), 1500);
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Error setting up the request:", err.message);
-        alert("Error setting up the request: " + err.message);
+        setPopup({
+          isOpen: true,
+          type: 'info',
+          message: 'Verification: You have already voted. You can view results but cannot vote again.'
+        });
+        setTimeout(() => navigate('/'), 2500);
       }
+    } catch (err) {
+      setPopup({
+        isOpen: true,
+        type: 'error',
+        message: err.response?.data?.message || 'Invalid username or password'
+      });
     }
-  }
-  
-  function handlechange(e, setter){
-    setter(e.target.value)
-  }
+  };
+
   return (
-    <div className="login">
-      <h1>Login</h1>
-      <form className="login-form" onSubmit={login}>
-        <div className="form-group">
-          <label htmlFor="username">Username:</label>
-          <input type="text" id="username" name="username" placeholder="Enter your name" value={username} onChange={(e)=> handlechange(e, setusername)} />
+    <div className="auth-container">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="auth-card neumorphic"
+      >
+        <h2>Welcome Back</h2>
+        <p className="subtitle">Secure login for certified voters</p>
+
+        <form onSubmit={handleLogin}>
+          <div className="input-group">
+            <User size={20} className="input-icon" />
+            <input 
+              type="text" 
+              placeholder="Username" 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)} 
+              required 
+            />
+          </div>
+          <div className="input-group">
+            <Lock size={20} className="input-icon" />
+            <input 
+              type="password" 
+              placeholder="Password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+            />
+          </div>
+
+          <button type="submit" className="auth-btn neumorphic-btn">
+            Login <ArrowRight size={18} style={{ marginLeft: '8px' }} />
+          </button>
+        </form>
+
+        <div className="divider"></div>
+
+        <div className="auth-links">
+          <Link to="/forgot-password">Forgot Password?</Link>
+          <Link to="/signup">Create Account</Link>
         </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
-          <input type="password" id="password" name="password" placeholder="Enter your password" value={password} onChange={(e)=>handlechange(e, setpassword)}/>
-        </div>
-        <button type="submit">Login</button>
-        <div>
-           <small>Don't have a account ? </small><a href="/signup">Signup</a>
-        </div>
-      </form>
+      </motion.div>
+
+      <Popup 
+        isOpen={popup.isOpen} 
+        onClose={() => setPopup({ ...popup, isOpen: false })} 
+        type={popup.type} 
+        message={popup.message} 
+      />
     </div>
   );
-}
+};
 
 export default Login;

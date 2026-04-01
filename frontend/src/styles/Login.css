@@ -1,59 +1,25 @@
-.login {
-    position: relative;
-    top: 100px;
-    width: 300px;
-    margin: 50px auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .login h1 {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .login-form .form-group {
-    margin-bottom: 15px;
-  }
-  
-  .login-form label {
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  .login-form input[type="text"],
-  .login-form input[type="password"] {
-    width: 94%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-  }
-  
-  .login-form button {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 3px;
-    background-color: #070808;
-    color: #fff;
-    cursor: pointer;
-  }
-  
-  .login-form button:hover {
-    background-color: #040405;
-  }
-  
-  @media screen and (max-width: 480px) {
-    .login {
-      top: 50px;
-      width: 85%;
-      padding: 15px;
-    }
-    .login h1 {
-      font-size: 1.5rem;
-    }
-  }
-  
+/* Login and Signup use global index.css styles for consistency */
+
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.auth-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.auth-links a:hover {
+  color: var(--accent-color);
+}
+
+.divider {
+  height: 1px;
+  background: var(--surface-v2);
+  margin: 2rem 0;
+  box-shadow: var(--shadow-in);
+}

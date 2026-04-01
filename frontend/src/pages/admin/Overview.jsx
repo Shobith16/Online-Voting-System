@@ -1,146 +1,92 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import '../../styles/overview.css';
-// import logo from "../../assets/logo.png";
+import { Users, Vote as VoteIcon, Building2, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Popup from '../../components/Popup';
+import '../../styles/Admin.css';
 
-function Overview() {
+const Overview = () => {
   const [candidates, setCandidates] = useState([]);
-  const [editingCandidate, setEditingCandidate] = useState(null);
-  const [editedCandidate, setEditedCandidate] = useState({
-    Candidate: '',
-    Age: '',
-    Party: '',
-    State: '',
-    District: '',
-    Taluk: '',
-    Vote:'',
-  });
+  const [votersCount, setVotersCount] = useState(0);
+  const [popup, setPopup] = useState({ isOpen: false, type: 'info', message: '' });
 
   useEffect(() => {
-    // Fetch candidate data from the backend API
-    api.get('/candidates_details')
-      .then(response => {
-        setCandidates(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching candidates:', error);
-      });
+    const fetchData = async () => {
+      try {
+        const candRes = await api.get('/candidates');
+        setCandidates(candRes.data);
+        // Assuming we have a way to get voters count, or just total votes for now
+        const totalVotes = candRes.data.reduce((sum, c) => sum + (c.Vote || 0), 0);
+        setVotersCount(totalVotes);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
   }, []);
 
-  const handleEditCandidate = (candidate) => {
-    setEditingCandidate(candidate);
-    setEditedCandidate(candidate); 
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditedCandidate(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
-
-  const handleSaveCandidate = async () => {
+  const handleDelete = async (id) => {
     try {
-      // Send PUT request to update candidate details
-      console.log(editedCandidate)
-      let response = await api.put(`/candidates/${editingCandidate._id}`, editedCandidate);
-
-      console.log('Candidate updated successfully:', response.data);
-      // Update candidate details in the UI
-      setCandidates(prevCandidates => prevCandidates.map(candidate => {
-        if (candidate._id === editingCandidate._id) {
-          return { ...candidate, ...editedCandidate };
-        }
-        
-        return candidate;
-       
-      }));
-
-      // Reset editing state
-      setEditingCandidate(null);
-    } catch (error) {
-      console.error('Error updating candidate:', error);
-    }
-  };
-
-  const handleRemoveCandidate = async (candidateId) => {
-    try {
-      // Send DELETE request to remove candidate from the database
-      await api.delete(`/candidate_del/${candidateId}`);
-      
-      // Update state to reflect removal of the candidate
-      setCandidates(prevCandidates => prevCandidates.filter(candidate => candidate._id !== candidateId));
-    } catch (error) {
-      console.error('Error removing candidate:', error);
+      await api.delete(`/candidate_del/${id}`);
+      setCandidates(candidates.filter(c => c._id !== id));
+      setPopup({ isOpen: true, type: 'success', message: 'Candidate removed successfully' });
+    } catch (err) {
+       setPopup({ isOpen: true, type: 'error', message: 'Failed to delete candidate' });
     }
   };
 
   return (
-    <div className="homecontainer2">
-      <h1>Candidates!</h1>
-      <div className="table-container">
-        <table className="candidates1">
-          <thead>
-            <tr>
-              <th>Candidate</th>
-              <th>Party</th>
-              <th>State</th>
-              <th>District</th>
-              <th>Taluk</th>
-              <th>Vote</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {candidates.map(candidate => (
-              <tr key={candidate._id}>
-                {editingCandidate && editingCandidate._id === candidate._id ? (
-                  <React.Fragment>
-                    <td>
-                      <input type="text" name="Candidate" value={editedCandidate.Candidate} onChange={handleInputChange} />
-                    </td>
-                    <td>
-                      <input type="text" name="Party" value={editedCandidate.Party} onChange={handleInputChange} />
-                    </td>
-                    <td>
-                      <input type="text" name="State" value={editedCandidate.State} onChange={handleInputChange} />
-                    </td>
-                    <td>
-                      <input type="text" name="District" value={editedCandidate.District} onChange={handleInputChange} />
-                    </td>
-                    <td>
-                      <input type="text" name="Taluk" value={editedCandidate.Taluk} onChange={handleInputChange} />
-                    </td>
-                    <td>
-                      <input type="number" name="Vote" value={editedCandidate.Vote} onChange={handleInputChange} />
-                    </td>
-                    <td className="button-group">
-                      <button onClick={handleSaveCandidate}>Save</button>
-                      <button onClick={() => setEditingCandidate(null)}>Cancel</button>
-                    </td>
-                  </React.Fragment>
-                ) : (
-                  <React.Fragment>
-                    <td>{candidate.Candidate}</td>
-                    <td>{candidate.Party}</td>
-                    <td>{candidate.State}</td>
-                    <td>{candidate.District}</td>
-                    <td>{candidate.Taluk}</td>
-                    <td>{candidate.Vote}</td>
-                    <td className="button-group">
-                      <button onClick={() => handleEditCandidate(candidate)}>Edit</button>
-                      <button onClick={() => handleRemoveCandidate(candidate._id)}>Remove</button>
-                    </td>
-                  </React.Fragment>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="overview-wrapper">
+      <div className="admin-header">
+        <h1>Admin Dashboard</h1>
+        <p className="subtitle">Real-time election oversight and management</p>
       </div>
+
+      <div className="admin-grid">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="stat-card neumorphic">
+          <Users className="logo-icon" />
+          <h3>Total Candidates</h3>
+          <div className="value">{candidates.length}</div>
+        </motion.div>
+        
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="stat-card neumorphic">
+          <VoteIcon className="logo-icon" />
+          <h3>Total Votes cast</h3>
+          <div className="value">{votersCount}</div>
+        </motion.div>
+      </div>
+
+      <div className="admin-table-container neumorphic">
+        <h3 style={{ marginBottom: '1.5rem', fontWeight: 800 }}>Manage Candidates</h3>
+        {candidates.map((c, idx) => (
+          <motion.div 
+            key={c._id} 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ delay: idx * 0.05 }}
+            className="admin-item"
+          >
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{c.Candidate}</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{c.Party} | {c.District}</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+              <div style={{ fontWeight: 800, color: 'var(--accent-color)' }}>{c.Vote} Votes</div>
+              <button 
+                onClick={() => handleDelete(c._id)} 
+                className="neumorphic-btn" 
+                style={{ height: '40px', width: '40px', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              >
+                <Trash2 size={18} color="#ef4444" />
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <Popup isOpen={popup.isOpen} onClose={() => setPopup({ ...popup, isOpen: false })} type={popup.type} message={popup.message} />
     </div>
   );
-  
-}  
+};
+
 export default Overview;

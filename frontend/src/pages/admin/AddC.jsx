@@ -1,140 +1,73 @@
 import React, { useState } from 'react';
-import '../../styles/AddC.css'
 import api from '../../api/axios';
-function AddC() {
-  const [form, setForm] = useState({
-    Candidate: '',
-    Age: '',
-    Party: '',
-    State: '',
-    District: '',
-    Taluk: '',
-    Vote:'0',
-  });
-  
-  const [errors, setErrors] = useState({});
+import { UserPlus, User, Award, MapPin, Calendar, CheckCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Popup from '../../components/Popup';
 
-  const Submit = async (e) => {
-    e.preventDefault();
+const AddC = () => {
+    const [Candidate, setname] = useState('');
+    const [Age, setage] = useState('');
+    const [Party, setparty] = useState('');
+    const [State, setstate] = useState('');
+    const [District, setdistrict] = useState('');
+    const [Taluk, settaluk] = useState('');
+    const [popup, setPopup] = useState({ isOpen: false, type: 'info', message: '' });
 
-    // Validate form fields
-    const newErrors = {};
-    if (form.Candidate.trim() === "") {
-      newErrors.candidate = "Candidate is required";
-    }
-    if (isNaN(form.Age) || form.Age.trim() === "") {
-      newErrors.Age = "Age is required and must be a number";
-    }
-    if (form.Party.trim() === "") {
-      newErrors.Party = "Party is required";
-    }
-    if (form.State.trim() === "") {
-      newErrors.state = "State is required";
-    }
-    if (form.District.trim() === "") {
-      newErrors.District = "District is required";
-    }
-    if (form.Taluk.trim() === "") {
-      newErrors.Taluk = "Taluk is required";
-    }
+    const handleAdd = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/candidates', { Candidate, Age, Party, State, District, Taluk });
+            setPopup({ isOpen: true, type: 'success', message: `Candidate ${Candidate} added successfully!` });
+            // Clear form
+            setname(''); setage(''); setparty(''); setstate(''); setdistrict(''); settaluk('');
+        } catch (err) {
+            setPopup({ isOpen: true, type: 'error', message: err.response?.data?.message || 'Failed to add candidate' });
+        }
+    };
 
-    // If there are errors, set the errors state and return
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+    return (
+        <div className="add-candidate-wrapper">
+            <div className="admin-header">
+                <h1>Add New Candidate</h1>
+                <p className="subtitle">Register a new candidate for the upcoming election</p>
+            </div>
 
-    // If there are no errors, submit the form
-    try {
-      // console.log(candidate,Age,Party,state)
-      const response = await api.post("/candidates", form);
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="auth-card neumorphic" style={{ maxWidth: '700px' }}>
+                <form onSubmit={handleAdd} className="signup-grid">
+                    <div className="input-group">
+                        <User size={18} className="input-icon" />
+                        <input type="text" placeholder="Candidate Name" value={Candidate} onChange={(e) => setname(e.target.value)} required />
+                    </div>
+                    <div className="input-group">
+                        <Calendar size={18} className="input-icon" />
+                        <input type="number" placeholder="Age" value={Age} onChange={(e) => setage(e.target.value)} required />
+                    </div>
+                    <div className="input-group">
+                        <Award size={18} className="input-icon" />
+                        <input type="text" placeholder="Party Name" value={Party} onChange={(e) => setparty(e.target.value)} required />
+                    </div>
+                    <div className="input-group">
+                        <MapPin size={18} className="input-icon" />
+                        <input type="text" placeholder="State" value={State} onChange={(e) => setstate(e.target.value)} required />
+                    </div>
+                    <div className="input-group">
+                        <MapPin size={18} className="input-icon" />
+                        <input type="text" placeholder="District" value={District} onChange={(e) => setdistrict(e.target.value)} required />
+                    </div>
+                    <div className="input-group">
+                        <MapPin size={18} className="input-icon" />
+                        <input type="text" placeholder="Taluk" value={Taluk} onChange={(e) => settaluk(e.target.value)} required />
+                    </div>
+                    
+                    <button type="submit" className="auth-btn neumorphic-btn full-width" style={{ marginTop: '1.5rem' }}>
+                        <CheckCircle size={18} /> Register Candidate
+                    </button>
+                </form>
+            </motion.div>
 
-      console.log(response.data.message);
-      alert(response.data.message)
-      // Show a success messAge or navigate to another pAge
-    } catch (error) {
-      console.error(error);
-      // Show an error messAge
-    }
-  };
-
-  const handleInputChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  return (
-    <div className="outer">
-      <div className="addcandidate">
-      <form onSubmit={Submit}>
-        <label htmlFor="candidate">Candidate:</label>
-        <input
-          type="text"
-          name="Candidate"
-          id="Candidate"
-          value={form.Candidate}
-          onChange={handleInputChange}
-        />
-        {errors.candidate && <p>{errors.candidate}</p>}
-
-        <label htmlFor="Age">Age:</label>
-        <input
-          type="number"
-          name="Age"
-          id="Age"
-          value={form.Age}
-          onChange={handleInputChange}
-        />
-        {errors.Age && <p>{errors.Age}</p>}
-
-        <label htmlFor="Party">Party:</label>
-        <input
-          type="text"
-          name="Party"
-          id="Party"
-          value={form.Party}
-          onChange={handleInputChange}
-        />
-        {errors.Party && <p>{errors.Party}</p>}
-
-        <label htmlFor="state">State:</label>
-        <input
-          type="text"
-          name="State"
-          id="State"
-          value={form.State}
-          onChange={handleInputChange}
-        />
-        {errors.state && <p>{errors.state}</p>}
-
-        <label htmlFor="District">District:</label>
-        <input
-          type="text"
-          name="District"
-          id="District"
-          value={form.District}
-          onChange={handleInputChange}
-        />
-        {errors.District && <p>{errors.District}</p>}
-
-        <label htmlFor="Taluk">Taluk:</label>
-        <input
-          type="text"
-          name="Taluk"
-          id="Taluk"
-          value={form.Taluk}
-          onChange={handleInputChange}
-        />
-        {errors.Taluk && <p>{errors.Taluk}</p>}
-
-        <button type="submit">Register</button>
-      </form>
-    </div>
-    </div>
-    
-  );
-}
+            <Popup isOpen={popup.isOpen} onClose={() => setPopup({ ...popup, isOpen: false })} type={popup.type} message={popup.message} />
+        </div>
+    );
+};
 
 export default AddC;

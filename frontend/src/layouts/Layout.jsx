@@ -1,15 +1,13 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import Header from '../components/Header';
 
 function Layout({ children }) {
   return (
-    <div>
-      <Header/>
+    <div className="app-layout">
       <Navbar />
-      {children}
-      <Footer />
+      <main className="main-content">
+        {children}
+      </main>
     </div>
   );
 }

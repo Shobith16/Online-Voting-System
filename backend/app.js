@@ -49,6 +49,7 @@ db.on('disconnected', () => {
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log('Validation errors:', errors.array());
     return res.status(400).json({ errors: errors.array() });
   }
   next();
@@ -108,7 +109,7 @@ app.post('/finishedvotinglist', verifyToken, async (req, res) => {
   }
 });
 
-app.put('/candidates/:id', verifyToken, async (req, res) => {
+app.put('/candidates/:id', verifyAdmin, async (req, res) => {
   const candidateId = req.params.id;
 
   try {
@@ -122,10 +123,10 @@ app.put('/candidates/:id', verifyToken, async (req, res) => {
     if (District) updateData.District = District;
     if (Taluk) updateData.Taluk = Taluk;
 
-    // Use $inc for Vote to ensure server-side increment
+    // Admin edits do NOT increment the vote count
     const updatedCandidate = await Candidateschema.findByIdAndUpdate(
       candidateId, 
-      { ...updateData, $inc: { Vote: 1 } }, 
+      updateData, 
       { new: true }
     );
 
@@ -140,6 +141,28 @@ app.put('/candidates/:id', verifyToken, async (req, res) => {
   }
 });
 
+// Dedicated endpoint for voting
+app.post('/candidates/:id/vote', verifyToken, async (req, res) => {
+  const candidateId = req.params.id;
+  try {
+    // Only handles the vote increment
+    const updatedCandidate = await Candidateschema.findByIdAndUpdate(
+      candidateId, 
+      { $inc: { Vote: 1 } }, 
+      { new: true }
+    );
+
+    if (!updatedCandidate) {
+      return res.status(404).json({ error: 'Candidate not found' });
+    }
+
+    res.json({ message: 'Vote registered successfully', voteCount: updatedCandidate.Vote });
+  } catch (error) {
+    console.error('Error voting:', error);
+    res.status(500).json({ error: 'Failed to register vote' });
+  }
+});
+
 app.delete('/candidate_del/:id', verifyAdmin, async (req, res) => {
   const candidateId = req.params.id;
   try {
@@ -151,7 +174,7 @@ app.delete('/candidate_del/:id', verifyAdmin, async (req, res) => {
   }
 });
 
-app.get('/candidates_details', async (req, res) => {
+app.get('/candidates', async (req, res) => {
   try {
     const collection = db.collection('candidates');
     const candidates = await collection.find({}).toArray();
@@ -258,14 +281,17 @@ app.post('/login',
   handleValidationErrors,
   async (req, res) => {
   const { username, password } = req.body;
+  console.log('Login attempt for:', username);
 
   const userdata = await User.findOne({ username })
   if (!userdata) {
+    console.log('User not found:', username);
     return res.status(401).json({ message: 'Invalid username or password' });
   }
 
   const isvalid = await bcrypt.compare(password, userdata.password);
   if (isvalid) {
+    console.log('Login successful for:', username);
     const token = jwt.sign(
       { v_id: userdata.v_id, username: userdata.username, isAdmin: userdata.isAdmin },
       process.env.JWT_SECRET,
@@ -273,6 +299,7 @@ app.post('/login',
     );
     res.status(200).json({ 'message': 'Successfully Loggedin!', 'v_id': userdata.v_id, isAdmin: userdata.isAdmin, token })
   } else {
+    console.log('Invalid password for:', username);
     res.status(401).json({ message: 'Invalid username or password' });
   }
 });
@@ -303,6 +330,35 @@ app.post('/admin/login',
     res.status(401).json({ message: 'Invalid admin credentials' });
   }
 });
+
+app.post('/reset-password',
+  [
+    body('v_id').notEmpty().withMessage('Voter ID is required'),
+    body('phone').notEmpty().withMessage('Phone number is required'),
+    body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long'),
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+    const { v_id, phone, newPassword } = req.body;
+
+    try {
+      // Find user by both Voter ID and Phone for verification
+      const user = await User.findOne({ v_id, phone });
+      if (!user) {
+        return res.status(404).json({ message: 'User not found with matching Voter ID and Phone' });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+
+      res.json({ message: 'Password reset successful' });
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      res.status(500).json({ error: 'Failed to reset password' });
+    }
+  }
+);
 
 const port = process.env.PORT || 5000
 if (require.main === module) {
