@@ -2,7 +2,7 @@
 
 ## 📋 Project Summary
 
-A full-stack **Online Voting System** built with **React.js** (frontend) and **Express.js + MongoDB** (backend). The application allows voters to register, authenticate, and cast votes for candidates in their locality (filtered by Taluk). An admin dashboard provides candidate management, election results visualization (pie charts), and re-election controls.
+A full-stack **Online Voting System** built with **React.js** (frontend) and **Express.js + MongoDB** (backend). The application features a **Premium Neumorphic Dark Mode** UI, atomic server-side voting logic, and role-based access control (RBAC). It includes a secure voter registration, authentication, password recovery flow, and a comprehensive admin dashboard for real-time election management.
 
 ---
 
@@ -10,12 +10,12 @@ A full-stack **Online Voting System** built with **React.js** (frontend) and **E
 
 | Layer        | Technology                                               |
 | ------------ | -------------------------------------------------------- |
-| **Frontend** | React 18, React Router v6, Axios, Chart.js, CSS          |
-| **Backend**  | Node.js, Express.js 4.x                                  |
+| **Frontend** | React 18, React Router v6, Axios, Chart.js, Framer Motion |
+| **Backend**  | Node.js, Express.js 4.x, Express Validator               |
 | **Database** | MongoDB (via Mongoose 8.x)                               |
-| **Auth**     | bcryptjs (password hashing) + JWT (jsonwebtoken)         |
+| **Auth**     | bcryptjs (hashing) + JWT (jsonwebtoken)                  |
+| **UI/UX**    | Neumorphic Dark Mode (Vanilla CSS), Lucide Icons         |
 | **Testing**  | Jest, Supertest, mongodb-memory-server                   |
-| **Other**    | dotenv, body-parser, CORS, react-chartjs-2               |
 
 ---
 
@@ -24,255 +24,113 @@ A full-stack **Online Voting System** built with **React.js** (frontend) and **E
 ```
 Online-Voting-System/
 ├── backend/
-│   ├── app.js                  # Express server & all API routes (exports app)
-│   ├── db.js                   # Standalone DB connection (unused by app.js)
+│   ├── app.js                  # Express server & all API routes
 │   ├── middleware/
-│   │   └── auth.js             # JWT verifyToken middleware
+│   │   └── auth.js             # JWT verifyToken & verifyAdmin middleware
 │   ├── models/
-│   │   ├── user.js             # Voter/User schema
+│   │   ├── user.js             # User/Voter schema (includes isAdmin flag)
 │   │   ├── candidates.js       # Candidate schema
-│   │   └── FinishedVotinglist.js  # Voted-user tracking schema
+│   │   └── FinishedVotinglist.js  # Persistent Voted-user tracking
 │   ├── tests/
-│   │   └── auth.test.js        # Jest unit tests (3 auth tests)
+│   │   └── auth.test.js        # Comprehensive security & auth test suite
 │   ├── package.json
-│   └── .gitignore
+│   └── .env                    # PORT, MONGODB_URL, JWT_SECRET
 │
 ├── frontend/
-│   ├── public/                 # Static assets (index.html, favicon, etc.)
 │   ├── src/
-│   │   ├── App.js              # Root component with React Router
-│   │   ├── index.js            # Entry point
+│   │   ├── App.js              # Root component with Protected & Admin routes
 │   │   ├── api/
-│   │   │   └── axios.js        # Centralized Axios instance with JWT interceptor
+│   │   │   └── axios.js        # Centralized Axios with Bearer token handling
+│   │   ├── layouts/
+│   │   │   └── Layout.jsx      # Global shell for navigation and content
 │   │   ├── components/
-│   │   │   ├── Home.jsx        # Voting page (filtered by Taluk)
-│   │   │   ├── Login.jsx       # User login (stores JWT token)
-│   │   │   ├── SignUp.jsx      # User registration with cascading State/District/Taluk
-│   │   │   ├── Admin.jsx       # Admin layout with sidebar navigation
-│   │   │   ├── Overview.jsx    # Admin: candidate table (CRUD)
-│   │   │   ├── AddC.jsx        # Admin: add new candidate form
-│   │   │   ├── Result.jsx      # Admin: election results pie chart
-│   │   │   ├── Reele.jsx       # Admin: re-election (reset all votes)
-│   │   │   ├── Layout.jsx      # Public page layout wrapper
-│   │   │   ├── Header.jsx      # Header component
-│   │   │   ├── Navbar.jsx      # Navigation bar
-│   │   │   ├── Footer.jsx      # Footer component
-│   │   │   └── About.jsx       # About page
-│   │   ├── styles/             # Component-specific CSS files (11 files)
-│   │   ├── json/
-│   │   │   └── district.json   # District list for result filtering
-│   │   └── assets/
-│   │       └── logo.png        # Party logo placeholder
+│   │   │   ├── Navbar.jsx      # Responsive nav with dynamic Admin links
+│   │   │   └── Popup.jsx       # Custom animated confirmation & alert modals
+│   │   ├── pages/              # User-facing screens
+│   │   │   ├── Home.jsx        # Neumorphic voting grid
+│   │   │   ├── Login.jsx       # Secure login with Admin redirection
+│   │   │   ├── SignUp.jsx      # Voter registration ( cascading districts )
+│   │   │   ├── About.jsx       # Platform info
+│   │   │   ├── ForgotPassword.jsx # Secure password recovery screen
+│   │   │   └── ProtectedRoute.jsx # Auth guard for user routes
+│   │   ├── pages/admin/        # Administrative screens (AdminRoute protected)
+│   │   │   ├── Admin.jsx       # Admin layout with unified sidebar
+│   │   │   ├── Overview.jsx    # Candidate management (CRUD)
+│   │   │   ├── AddC.jsx        # Candidate registration form
+│   │   │   ├── Result.jsx      # Real-time results viz (Bar & Pie charts)
+│   │   │   ├── Reele.jsx       # Reset election (Danger Zone)
+│   │   │   └── AdminRoute.jsx  # Admin-only route guard
+│   │   ├── styles/             # Modularized theme & component CSS (Global Neumorphic)
 │   └── package.json
-│
-└── README.md                   # Setup instructions
 ```
 
 ---
 
-## 🗄️ Database Schema (MongoDB / Mongoose)
+## 🔌 API Endpoints (v2.0)
 
-### `voters` Collection (User Model)
-
-| Field      | Type   | Description                   |
-| ---------- | ------ | ----------------------------- |
-| `username` | String | Voter's full name             |
-| `age`      | Number | Voter's age                   |
-| `v_id`     | String | Unique Voter ID               |
-| `phone`    | Number | Phone number                  |
-| `State`    | String | State of residence            |
-| `District` | String | District of residence         |
-| `Taluk`    | String | Taluk of residence            |
-| `password` | String | Hashed password (bcryptjs)    |
-
-### `candidates` Collection (Candidate Model)
-
-| Field       | Type   | Description                  |
-| ----------- | ------ | ---------------------------- |
-| `Candidate` | String | Candidate's name             |
-| `Age`       | Number | Candidate's age              |
-| `Party`     | String | Political party name         |
-| `State`     | String | State constituency           |
-| `District`  | String | District constituency        |
-| `Taluk`     | String | Taluk constituency           |
-| `Vote`      | Number | Current vote count           |
-
-### `vid_lists` Collection (Finished Voting List)
-
-| Field  | Type   | Description                            |
-| ------ | ------ | -------------------------------------- |
-| `v_id` | String | Voter ID of users who have already voted |
+| Method   | Endpoint                  | Auth      | Description                                     |
+| -------- | ------------------------- | --------- | ----------------------------------------------- |
+| `POST`   | `/signup`                 | Public    | Validated voter registration (Age 18+ check)    |
+| `POST`   | `/login`                  | Public    | Returns JWT + isAdmin + v_id                    |
+| `POST`   | `/reset-password`         | Public    | Secure recovery via v_id + phone verification   |
+| `GET`    | `/candidates`             | Public    | Fetch all active candidates                     |
+| `POST`   | `/candidates/:id/vote`    | 🔒 JWT    | **Atomic** vote increment ($inc)                |
+| `POST`   | `/checkuser`              | 🔒 JWT    | Verification for already-voted voters           |
+| `POST`   | `/finishedvotinglist`     | 🔒 JWT    | Mark voter as "Completed" in DB                 |
+| `POST`   | `/candidates`             | 🛡️ Admin  | Add new candidate                               |
+| `PUT`    | `/candidates/:id`         | 🛡️ Admin  | Update candidate profile (locked vote counts)   |
+| `DELETE` | `/candidate_del/:id`      | 🛡️ Admin  | Remove a candidate                              |
+| `DELETE` | `/clearVoters`            | 🛡️ Admin  | Full election reset (clear votes/logs)          |
 
 ---
 
-## 🔌 API Endpoints
+## 🔑 Core Features & Architectural Improvements
 
-| Method   | Endpoint                 | Auth     | Description                                    |
-| -------- | ------------------------ | -------- | ---------------------------------------------- |
-| `POST`   | `/signup`                | Public   | Register a new voter (password hashed with bcrypt) |
-| `POST`   | `/login`                 | Public   | Authenticate voter, returns JWT token + Voter ID |
-| `POST`   | `/checkuser`             | 🔒 JWT   | Check if a voter has already voted             |
-| `POST`   | `/finishedvotinglist`    | 🔒 JWT   | Mark a voter as having completed voting        |
-| `GET`    | `/candidates_details`    | Public   | Fetch all candidates                           |
-| `GET`    | `/user`                  | Public   | Fetch all registered voters                    |
-| `POST`   | `/candidates`            | Public   | Add a new candidate (admin)                    |
-| `PUT`    | `/candidates/:id`        | 🔒 JWT   | Update candidate details / cast vote           |
-| `DELETE` | `/candidate_del/:id`     | Public   | Delete a candidate (admin)                     |
-| `DELETE` | `/clearVoters`           | Public   | Reset all votes & clear voter list (re-election) |
+### 🛡️ Security First
+- **Atomic Voting**: Switched from client-side PUT to server-side `POST /vote` using `$inc`. This prevents race conditions and value manipulation.
+- **Role-Based Access (RBAC)**: Implemented `isAdmin` flag in user schema and `verifyAdmin` middleware to protect management APIs.
+- **Route Guards**: `ProtectedRoute` and `AdminRoute` on frontend ensure users only see authorized screens.
+- **Input Validation**: `express-validator` applied across all critical registration/login/admin routes.
 
----
-
-## 🖥️ Frontend Routes
-
-| Route             | Component(s)           | Access  | Description                        |
-| ----------------- | ---------------------- | ------- | ---------------------------------- |
-| `/`               | `Layout` → `Home`      | Voter   | Main voting page                   |
-| `/about`          | `Layout` → `About`     | Public  | About the platform                 |
-| `/login`          | `Login`                | Public  | User login form                    |
-| `/signup`         | `SignUp`                | Public  | User registration form             |
-| `/Admin`          | `Admin` → `Overview`   | Admin   | Candidate overview table (CRUD)    |
-| `/Addcandidate`   | `Admin` → `AddC`       | Admin   | Add new candidate form             |
-| `/result`         | `Admin` → `Result`     | Admin   | Election results (pie chart)       |
-| `/reele`          | `Admin` → `Reele`      | Admin   | Re-election / reset votes          |
-
----
-
-## 🔑 Core Features
-
-### Voter Side
-- **Registration** — Cascading dropdowns for State → District → Taluk (Karnataka & Tamil Nadu with full taluk data)
-- **Login** — Username/password authentication with bcrypt; returns JWT token (1-day expiry)
-- **JWT-Protected Voting** — Token sent via `Authorization: Bearer` header on all voting actions
-- **Vote Prevention** — Checks `vid_lists` collection before allowing a vote; prevents double voting
-- **Location-Based Filtering** — Voters only see candidates matching their Taluk
-
-### Admin Side
-- **Candidate Overview** — Tabular view of all candidates with inline edit and delete functionality
-- **Add Candidate** — Form with validation to register new candidates
-- **Election Results** — Pie chart (Chart.js) filtered by district, showing vote distribution
-- **Re-Election** — One-click reset: clears all voter records and resets all candidate vote counts to 0
-- **Sidebar Navigation** — Collapsible sidebar for admin panel navigation
+### 🎨 Premium UI/UX (Phase 2)
+- **Neumorphic Design System**: Global dark-mode aesthetic utilizing off-white text and soft shadows on #1a1a1e background.
+- **Custom Popups**: Replaced native `alert()` with a bespoke, animated `Popup` system using `framer-motion` for confirmations and results.
+- **Real-time Analytics**: Admin dashboard features high-contrast Bar and Pie charts for live vote tracking.
 
 ---
 
 ## 🔄 Application Data Flow
 
-```
-┌──────────────┐     POST /signup      ┌──────────────┐     MongoDB
-│              │ ──────────────────────►│              │ ──────────────►  voters
-│   SignUp     │                        │              │
-│   Component  │     POST /login       │   Express    │
-│              │ ──────────────────────►│   Server     │ ◄──────────────  voters
-└──────────────┘                        │   (app.js)   │
-                                        │              │
-┌──────────────┐  POST /checkuser      │              │ ──────────────►  vid_lists
-│   Login      │ ──────────────────────►│              │
-│   Component  │                        │              │
-└──────────────┘                        │              │
-                                        │              │
-┌──────────────┐  GET /candidates      │              │ ◄──────────────  candidates
-│   Home       │ ──────────────────────►│              │
-│  (Voting)    │  PUT /candidates/:id  │              │ ──────────────►  candidates
-│              │ ──────────────────────►│              │
-│              │  POST /finishedvoting │              │ ──────────────►  vid_lists
-│              │ ──────────────────────►│              │
-└──────────────┘                        │              │
-                                        │              │
-┌──────────────┐  CRUD /candidates     │              │ ◄─────────────►  candidates
-│   Admin      │ ──────────────────────►│              │
-│   Panel      │  DELETE /clearVoters  │              │ ──────────────►  vid_lists
-│              │ ──────────────────────►│              │                  candidates
-└──────────────┘                        └──────────────┘
-```
+1. **Auth**: JWT is stored in `localStorage` alongside `adminToken` if applicable. 
+2. **Voting**: Clicking 'Cast Vote' triggers a **Custom Modal Confirmation**. On confirm, `POST /vote` increments counts and `POST /finishedvotinglist` logs the user's ID to prevent repeat votes.
+3. **Admin**: Dashboards utilize protected Axios instances to perform CRUD on the candidate collection and election resets.
 
 ---
 
-## 🚀 How to Run
-
-### Prerequisites
-- Node.js (v16+)
-- MongoDB (running locally)
+## 🚀 Setup & Execution
 
 ### Backend
-```bash
-cd backend
-# Create a .env file with:
-#   PORT=5000
-#   MONGODB_URL=mongodb://localhost:27017/Voting_System
-#   JWT_SECRET=your-secret-key-here
-npm install
-node app.js
-```
+1. Create `.env`: `PORT`, `MONGODB_URL`, `JWT_SECRET`.
+2. `npm install` and `node app.js`.
+3. `npm test` to run the 7+ security-focused unit tests.
 
 ### Frontend
-```bash
-cd frontend
-npm install
-npm start
-```
-
-The frontend runs on `http://localhost:3000` and the backend API on `http://localhost:5000`.
-
-### Run Tests
-```bash
-cd backend
-npm test
-```
+1. `npm install` modules.
+2. `npm start` (Runs on port 3000).
 
 ---
 
-## ⚠️ Known Limitations & Areas for Improvement
+## ⚠️ Status & Future Improvements
 
-| Area                  | Issue / Improvement                                                                                     |
-| --------------------- | ------------------------------------------------------------------------------------------------------- |
-| ~~Authentication~~    | ✅ Resolved — JWT tokens now used for voter authentication (1-day expiry)                              |
-| **Admin Auth**        | Admin routes (`/Admin`, `/Addcandidate`, etc.) have no authentication or role-based access control      |
-| **API Security**      | No input sanitization or rate limiting on endpoints                                                      |
-| ~~Hardcoded URLs~~    | ✅ Resolved — Frontend uses centralized Axios instance (`src/api/axios.js`) with `baseURL`             |
-| **Duplicate DB Setup**| `db.js` exists but is unused; `app.js` handles its own MongoDB connection                              |
-| ~~Error Handling~~    | ✅ Resolved — Null check added for `userdata` before `bcrypt.compare` in login                         |
-| **State Data**        | State/District/Taluk data is hardcoded in `SignUp.jsx` — should be moved to DB or config               |
-| **Duplicate Voters**  | Signup checks for duplicate `v_id` but login uses `username` — inconsistent identity handling           |
-| **Scalability**       | Vote counting is done client-side then sent via PUT — vulnerable to manipulation                        |
-| ~~Testing~~           | ✅ Resolved — 3 Jest unit tests with supertest + mongodb-memory-server                                 |
-| **Responsive Design** | Limited responsive CSS — may need improvement for mobile devices                                        |
+| Area               | Improvement / Status                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| **Auth**           | ✅ JWT implemented for Users and Admins.                                            |
+| **Voting**         | ✅ Atomic server-side increments.                                                   |
+| **UI**             | ✅ Phase 2 Premium Redesign Complete (Neumorphism / Dark Mode).                     |
+| **Scalability**    | ✅ FinishedVotinglist prevents double-voting; atomic increment prevents data loss.   |
+| **Data Flow**      | ⚙️ Suggest moving hardcoded taluk/district JSON to a database collection.            |
+| **Session**        | ⚙️ Consider using HttpOnly cookies for storing tokens for enhanced security.         |
 
 ---
 
-## 🧩 Dependencies
-
-### Backend (`backend/package.json`)
-| Package      | Version | Purpose                          |
-| ------------ | ------- | -------------------------------- |
-| express      | ^4.19.2 | Web framework                    |
-| mongoose     | ^8.3.0  | MongoDB ODM                      |
-| bcryptjs     | ^2.4.3  | Password hashing                 |
-| bcrypt       | ^5.1.1  | Password hashing (native)        |
-| jsonwebtoken | ^9.x    | JWT token generation/verification |
-| cors         | ^2.8.5  | Cross-origin resource sharing    |
-| body-parser  | ^1.20.2 | Request body parsing             |
-| dotenv       | ^16.4.5 | Environment variable management  |
-| mongodb      | ^6.5.0  | MongoDB driver                   |
-
-### Backend Dev Dependencies
-| Package                | Version | Purpose                          |
-| ---------------------- | ------- | -------------------------------- |
-| jest                   | ^29.x  | Test runner                      |
-| supertest              | ^7.x   | HTTP assertions for Express      |
-| mongodb-memory-server  | ^10.x  | In-memory MongoDB for tests      |
-
-### Frontend (`frontend/package.json`)
-| Package              | Version  | Purpose                         |
-| -------------------- | -------- | ------------------------------- |
-| react                | ^18.2.0  | UI library                      |
-| react-dom            | ^18.2.0  | React DOM rendering             |
-| react-router-dom     | ^6.22.3  | Client-side routing             |
-| axios                | ^1.6.8   | HTTP client                     |
-| chart.js             | ^4.4.2   | Chart library                   |
-| react-chartjs-2      | ^5.2.0   | React wrapper for Chart.js      |
-| react-force-graph-2d | ^1.25.4  | 2D force graph (unused)         |
-| react-scripts        | ^5.0.1   | CRA build tooling               |
-
----
-
-> **Generated on:** March 30, 2026 | **Last updated:** March 30, 2026 (JWT Auth + Jest Tests)
+> **Generated on:** April 2, 2026 | **Last updated:** Phase 2 Completion (Neumorphism + Admin Access + Password Reset)
